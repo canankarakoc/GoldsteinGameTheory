@@ -1,0 +1,727 @@
+---
+title: "Goldstein Model Overview"
+author: Canan Karakoç
+date: July 2025
+output:
+  pdf_document: default
+  html_document: default
+editor_options: 
+  chunk_output_type: console
+---
+
+# Concept
+
+## Evolved interaction (EI) model
+
+Hosts and pathogens evolve their actual trait values directly:
+
+- Host evolves: $\tilde{c}$
+- Pathogen evolves: $\tilde{v}$
+- Evolution proceeds through independent trait changes on static fitness landscapes.
+
+## Evolved strategy (ES) model
+
+Organisms evolve **response strategies**:
+
+- Host strategy: $c(v) = max(0, min(1, c_0 + m_cv)) = max(0,min(1, c_0 +tan \theta_cv))$
+- Pathogen strategy: $v(c) = max(0, min(1, v_0 + m_vc )) = max(0,min(1, v_0 +tan \theta_vc))$
+- Trait values are determined by mutual responses; coevolutionary feedback is present.
+
+## Acute vs. Chronic Infections
+
+- **Acute infections**: Short-term, high-intensity. Immune activity aims to clear the pathogen rapidly. 
+
+- **Chronic infections**: Long-term persistence. The immune system suppresses but does not eliminate the pathogen. Mortality and transmission depend on partial suppression and allow coexistence.
+
+---
+
+## Hypotheses
+
+- **EI vs. ES**:
+  - EI: slow, stable evolution
+  - ES: bursts of rapid evolution (punctuated equilibrium)
+  - Transitions shaped by fitness landscape geometry
+
+- **Acute vs. Chronic**:
+  - Acute: selection may favor rapid clearance or high virulence tradeoffs
+  - Chronic: selection may favor coexistence, strategic suppression, and dynamic plasticity
+
+---
+
+## Original Model Equations (Goldstein et al.)
+
+### Shared Trait Space
+$$
+0 \leq v, c \leq 1
+$$
+
+Where $v$ is pathogen virulence and $c$ is host immune activity. 
+
+###  Acute Infection Model
+
+#### Transmission:
+
+$$
+r(v) = v^\beta
+$$
+
+#### Mortality:
+
+Note that $\epsilon$ is a small number preventing infinite mortality rates. 
+
+$$
+d(c, v) = d_0 + m_c \cdot \frac{(1 + \epsilon)c}{(1 + \epsilon) - c} + m_v \cdot \frac{(1 + \epsilon)v}{(1 + \epsilon) - v}
+$$
+
+#### Host Fitness:
+$$
+f_H = \frac{c}{c+d}
+$$
+
+#### Pathogen Fitness:
+$$
+f_P = \frac{v^\beta}{c+d}
+$$
+
+---
+
+
+### Chronic Infection Model
+
+#### Transmission:
+$$
+r(v, c) = (1 - c)v^\beta 
+$$
+
+#### Mortality:
+$$
+d(c, v) = d_0 + m_c \cdot \frac{(1 + \epsilon)c}{(1 + \epsilon) - c} + (1-c)m_v \cdot \frac{(1 + \epsilon)v}{(1 + \epsilon) - v}
+$$
+
+#### Host Fitness:
+$$
+f_H = \frac{1}{d}
+$$
+
+#### Pathogen Fitness:
+$$
+f_P = \frac{(1 - c)v^\beta }{d}
+$$
+
+---
+
+
+# Simulation Types
+
+## Evolved Interaction (EI)
+
+- Traits mutate directly
+- Fitness-based selection and fixation
+
+### Steps
+1. Generate candidate mutations $c'$, $v'$
+2. Compute fitness change and selection coefficient $s$
+3. Calculate fixation probability $p_{\text{fix}}$
+4. Apply mutation with rate $\propto p_{\text{fix}}$
+6. Advance time stochastically
+
+## Evolved Strategy (ES)
+
+- Traits determined by opponent-based functions
+
+### Steps
+1. Mutate $c_0, \theta_c$, $v_0, \theta_v$
+2. Find equilibrium $(c, v)$ by mutual response
+3. Evaluate selection and fixation
+4. Apply mutation and update time
+
+### Probability of Mutations for the EI scenario
+
+Probability of host mutation:
+$$p(c'- c) = \gamma \mathcal{N}_{0,0.1}(c'- c)$$ 
+Probability of pathogen mutation:
+$$p(v'- v) = \gamma \mathcal{N}_{0,0.1}(v'- v)$$
+$\gamma$ is  the relative likelihood of a mutation. 
+
+
+### Probability of Mutations for the ES scenario
+
+$$p([c - \theta_c] - [c'- \theta_c']) = \gamma \mathcal{N}_{0,0.1}(c'- c)\mathcal{N}_{0,0.1}\pi(\theta_c'- \theta_c)$$ 
+
+$$p([v - \theta_v] - [v'- \theta_v']) = (1-\gamma) \mathcal{N}_{0,0.1}(v'- v)\mathcal{N}_{0,0.1}\pi(\theta_v'- \theta_v)$$ 
+
+### Probability of Fixation
+
+$$
+p_{fix} = \frac{1 - \exp(-2s)}{1 - \exp(-4N_e s)}
+$$
+
+### Selection coefficient
+
+$$
+s = \frac{F_X(c',v') - F_X(c,v)}{F_X(c,v)}
+$$
+
+### Substitution Rate Comparison
+
+$$
+\omega = \frac{\text{observed substitution rate}}{1 / N_e}
+$$
+
+## Parameter Table
+
+| Parameter                | Symbol     | Description                                             | Default Value  | Biological?  |
+|-------------------------|------------|----------------------------------------------------------|----------------|--------------|
+| Baseline mortality       | $d_0$         | Background mortality                                 | 0.1            | Yes          |
+| Immune cost              | $m_c$         | Cost of immune activity                              | 0.1            | Yes          |
+| Virulence cost           | $m_v$         | Cost of pathogen virulence                           | 1.0            | Yes          |
+| Stabilizing term         | $\varepsilon$ | Numerical stabilizer (prevents division by zero)     | $10^{-4}$      | Technical    |
+| Transmission scaling     | $\beta$       | Controls steepness of transmission curve             | 1.0            | Yes          |
+| Host mutation prob       | $\gamma$      | Probability that a mutation affects host             | 0.01           | Algoritmic   |
+| Host pop size            | $N_e^H$       | Effective population size of host                    | $10^4$         | Yes          |
+| Pathogen pop size        | $N_e^P$       | Effective population size of pathogen                | $10^6$         | Yes          |
+| Mutation step            | $c_0$, $v_0$  | Intercept mutation step size                         | 0.01           | Algorithmic  |
+| Mutations slope          | $\theta_c$, $\theta_v$ | Strategy slope mutation step size           | 0.314 (0.01$\pi$)           | Algorithmic  |
+| Candidate mutations      | —             | Number of candidate mutations per generation         | 10000           | Algorithmic  |
+| Max dwell time           | —	           | Max evolutionary time allowed per fixation event     |	100	         | Algorithmic  |
+| Max evolutionary time	   | —	           | Total simulation time	                              |$1x10^6$ with  $1x10^4$  burn-in    | Algorithmic  |
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(ggplot2)
+library(patchwork)
+library(pracma)
+library(scales)
+
+mytheme <- theme_bw() +
+  theme(axis.ticks.length = unit(.25, "cm")) +
+  theme(legend.text = element_text(size = 10)) +
+  theme(axis.text = element_text(size = 10, color = "black"), axis.title = element_text(size = 10)) +
+  theme(plot.title = element_text(size = 11))+
+  theme(panel.border = element_rect(
+    fill = NA, colour = "black",
+    size = 1
+  )) +
+  theme(strip.text.x = element_text(size = 10), strip.background = element_blank()) +
+  #theme(legend.title = element_blank()) +
+  theme(panel.border = element_rect(
+    fill = NA, colour = "black",
+    linewidth = 1
+  )) +
+  theme(
+    axis.text.x.top = element_blank(), axis.title.x.top = element_blank(),
+    axis.text.y.right = element_blank(), axis.title.y.right = element_blank()
+  ) +
+  theme(
+    axis.title.x = element_text(margin = margin(10, 0, 0)),
+    axis.title.y = element_text(margin = margin(0, 10, 0, 0)),
+    axis.text.x = element_text(margin = margin(10, 0, 0, 0)),
+    axis.text.y = element_text(margin = margin(0, 10, 0, 0))
+  )
+
+theme_set(mytheme)
+
+# Load all simulation results
+df <- read.csv("results/all_simulations_replicates.csv")
+
+# Remove burn-in time
+#df_clean <- df %>% filter(time > 1000)
+
+# Average across replicates (optionally include sd or se)
+df_summary <- df %>%
+  filter(time > 10000) %>% #burn in time 
+  group_by(model, scenario, time) %>%
+  summarise(
+    c_mean = mean(c, na.rm = TRUE),
+    v_mean = mean(v, na.rm = TRUE),
+    f_H_mean = mean(f_H, na.rm = TRUE),
+    f_P_mean = mean(f_P, na.rm = TRUE),
+    omega_H = mean(omega_H, na.rm = TRUE),
+    omega_P = mean(omega_P, na.rm = TRUE),
+    dwell_time = mean(dwell_time, na.rm = TRUE),
+    theta_c = mean(theta_c, na.rm = TRUE), 
+    theta_v = mean(theta_v, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+```
+
+# Theory Notes
+## Fitness Landscapes 
+
+This section only evaluates fitness equations over a trait grid and plots them, no simulations involved. Probably best to start with this. 
+
+(Yellow highest fitness)
+
+### EI Host Fitness (Acute)	
+
+- The host benefits from increasing control c, especially when pathogen virulence v is low or moderate.
+
+- The best response curve (blue) shows hosts evolve higher c as v increases. Increased immune control is beneficial under more virulent infection.
+
+
+### EI Pathogen Fitness (Acute) 
+
+- The pathogen's fitness increases with v, but peaks at an intermediate level due to the cost imposed by host control c.
+
+- The red curve is the pathogen’s best response: it evolves to reduce v when host control is high, and increase v when host control is low.
+
+### EI Joint Fitness (Acute) 
+
+- Shows fitness contours (product of host × pathogen fitness).
+
+- Intersection of blue and red curves marks a Nash equilibrium (black dot) — neither player can improve fitness by changing strategy unilaterally.
+
+- In acute infections, the equilibrium lies at moderate v, high c. Consistent with host investing in strong immunity to offset pathogen aggressiveness.
+
+### ES Host Fitness (Chronic)	
+
+- Host fitness improves by suppressing pathogen virulence (v), and lowering immune control (c), especially since chronic immune activation is costly.
+
+- The blue best response line bends downward: lower c is favored when v is low (and vice versa).
+
+### ES Pathogen Fitness (Chronic)
+
+- Pathogen fitness is maximized at intermediate v, but now also increases when the host's immune control c is low.
+
+- The red best response curve flattens out as the pathogen finds a compromise: enough virulence to transmit, but not so much to trigger strong immunity.
+
+### ES Joint Fitness (Chronic)
+
+- Nash equilibrium here lies at moderate virulence and intermediate-low control:
+
+- Host tolerates some pathogen presence.
+- Pathogen "learns" not to kill host, stable chronic coexistence emerges.
+
+```{r fitness_all, echo=FALSE, message=FALSE, warning=FALSE}
+
+# Core Parameters
+beta <- 1
+d_0 <- 0.1
+m_c <- 0.1
+m_v <- 1
+epsilon <- 1e-4
+
+c_vals <- seq(0, 1, length.out = 300)
+v_vals <- seq(0, 1, length.out = 300)
+grid <- expand.grid(c = c_vals, v = v_vals)
+
+
+# Acute Functions (original paper)
+
+d_acute <- function(c, v) {
+  d_0 + m_c * (((1+epsilon) * c) / ((1+epsilon) - c)) + m_v * (((1+epsilon) * v )/ ((1+epsilon) - v))
+}
+
+r_acute <- function(v) v^beta
+
+f_H_acute <- function(c, v) {
+  d <- d_acute(c, v)
+  c / (d + c)
+}
+
+f_P_acute <- function(c, v) {
+  d <- d_acute(c, v)
+  r <- r_acute(v)
+  r / (d + c)
+}
+
+# Chronic Functions (original paper)
+d_chronic <- function(c, v) {
+  d_0 + m_c * (((1+epsilon) * c) / ((1+epsilon) - c)) + (1-c) * m_v * (((1+epsilon) * v )/ ((1+epsilon) - v))
+}
+
+r_chronic <- function(c,v) {
+  v^beta * (1 - c)
+}
+
+f_H_chronic <- function(c, v) {
+  1 / d_chronic(c, v)
+}
+
+f_P_chronic <- function(c, v) {
+   r <- r_chronic(c, v)
+   d <- d_chronic(c, v)
+   r / d
+}
+
+# Evaluate fitness functions
+grid <- grid %>%
+  mutate(
+    f_H_acute = mapply(f_H_acute, c, v),
+    f_P_acute = mapply(f_P_acute, c, v),
+    f_H_chronic = mapply(f_H_chronic, c, v),
+    f_P_chronic = mapply(f_P_chronic, c, v),
+    joint_fitness_acute = f_H_acute * f_P_acute,
+    joint_fitness_chronic = f_H_chronic * f_P_chronic
+  )
+
+fmax_H_acute <- max(grid$f_H_acute)
+fmax_P_acute <- max(grid$f_P_acute)
+fmax_H_chronic <- max(grid$f_H_chronic)
+fmax_P_chronic <- max(grid$f_P_chronic)
+
+grid <- grid %>%
+  mutate(
+    f_H_acute = f_H_acute / fmax_H_acute,
+    f_P_acute = f_P_acute / fmax_P_acute,
+    f_H_chronic = f_H_chronic / fmax_H_chronic,
+    f_P_chronic = f_P_chronic / fmax_P_chronic,
+    joint_fitness_acute = f_H_acute * f_P_acute,
+    joint_fitness_chronic = f_H_chronic * f_P_chronic
+  )
+
+# Optimal strategies
+# Best Response Curves
+v_vals <- seq(0.01, 0.99, length.out = 300)
+c_vals <- seq(0.01, 0.99, length.out = 300)
+
+opt_c_ac <- data.frame(
+  v = v_vals,
+  c = sapply(v_vals, function(v) optimize(function(c) -f_H_acute(c, v), c(1e-3, 0.99))$minimum)
+)
+
+# Evaluate over grid instead of optimize (more robust for flat/edge behavior)
+opt_v_ac <- data.frame(
+  c = c_vals,
+  v = sapply(c_vals, function(c) {
+    v_seq <- seq(0.01, 0.99, length.out = 200)
+    f_vals <- sapply(v_seq, function(v) f_P_acute(c, v))
+    v_seq[which.max(f_vals)]
+  })
+)
+
+opt_c_cr <- data.frame(
+  v = v_vals,
+  c = sapply(v_vals, function(v) optimize(function(c) -f_H_chronic(c, v), c(1e-3, 0.99))$minimum)
+)
+
+opt_v_cr <- data.frame(
+  c = c_vals,
+  v = sapply(c_vals, function(c) {
+    v_seq <- seq(0.01, 0.99, length.out = 200)
+    f_vals <- sapply(v_seq, function(v) f_P_chronic(c, v))
+    v_seq[which.max(f_vals)]
+  })
+)
+
+
+# Nash Point (best overlap of host/pathogen response)
+find_nash_brute_force <- function(host_df, path_df) {
+  expand.grid(i = 1:nrow(host_df), j = 1:nrow(path_df)) %>%
+    mutate(
+      c_host = host_df$c[i],
+      v_host = host_df$v[i],
+      c_path = path_df$c[j],
+      v_path = path_df$v[j],
+      dist = sqrt((c_host - c_path)^2 + (v_host - v_path)^2)
+    ) %>%
+    arrange(dist) %>%
+    slice(1) %>%
+    transmute(v = v_host, c = c_host)
+}
+
+# Acute
+opt_joint_acute <- find_nash_brute_force(opt_c_ac, opt_v_ac)
+
+# Chronic
+opt_joint_chronic <- find_nash_brute_force(opt_c_cr, opt_v_cr)
+
+# PLOTS 
+
+A <- ggplot(grid, aes(x = v, y = c, z = f_H_acute)) +
+  geom_contour_filled() +
+  geom_line(data = opt_c_ac, aes(x = v, y = c), color = "steelblue", size = 1, inherit.aes = FALSE) +
+  labs(title = "EI Acute \nHost Fitness", x = "v", y = "c") +
+  theme(legend.position = "none") +
+  scale_x_continuous(breaks = c(0, 0.5, 1)) +
+  scale_y_continuous(breaks = c(0, 0.5, 1))
+
+
+B <- ggplot(grid, aes(x = v, y = c, z = f_P_acute)) +
+  geom_contour_filled() +
+  geom_line(data = opt_v_ac, aes(x = v, y = c), color = "lightcoral", size = 1, inherit.aes = FALSE) +
+  labs(title = "EI Acute \nPathogen Fitness", x = "v", y = "c") +
+  theme(legend.position = "none") +
+  scale_x_continuous(breaks = c(0, 0.5, 1)) +
+  scale_y_continuous(breaks = c(0, 0.5, 1))
+
+
+C <- ggplot(grid, aes(x = v, y = c, z = joint_fitness_acute)) +
+  geom_contour(aes(z = f_H_acute), bins = 10, color = "steelblue", alpha = 0.5) +
+  geom_contour(aes(z = f_P_acute), bins = 10, color = "lightcoral", alpha = 0.5) +
+  geom_line(data = opt_c_ac, aes(x = v, y = c), color = "darkblue", inherit.aes = FALSE, size = 1, size = 1) +
+  geom_line(data = opt_v_ac, aes(x = v, y = c), color = "firebrick", inherit.aes = FALSE, size = 1) +
+  geom_point(data = opt_joint_acute, aes(x = v, y = c), color = "black", size = 3, inherit.aes = FALSE) +
+  labs(title = "EI Acute \nJoint Fitness", x = "v", y = "c") +
+  theme(legend.position = "none") +
+  scale_x_continuous(breaks = c(0, 0.5, 1)) +
+  scale_y_continuous(breaks = c(0, 0.5, 1))
+
+
+D <- ggplot(grid, aes(x = v, y = c, z = f_H_chronic)) +
+  geom_contour_filled() +
+  geom_line(data = opt_c_cr, aes(x = v, y = c), color = "steelblue", size = 1, inherit.aes = FALSE) +
+  labs(title = "ES Chronic \nHost Fitness", x = "v", y = "c") +
+  theme(legend.position = "none") +
+  scale_x_continuous(breaks = c(0, 0.5, 1)) +
+  scale_y_continuous(breaks = c(0, 0.5, 1))
+
+
+E <- ggplot(grid, aes(x = v, y = c, z = f_P_chronic)) +
+  geom_contour_filled() +
+  geom_line(data = opt_v_cr, aes(x = v, y = c), color = "lightcoral", size = 1, inherit.aes = FALSE) +
+  labs(title = "ES Chronic \nPathogen Fitness", x = "v", y = "c") +
+  theme(legend.position = "none") +
+  scale_x_continuous(breaks = c(0, 0.5, 1)) +
+  scale_y_continuous(breaks = c(0, 0.5, 1))
+
+
+F <- ggplot(grid, aes(x = v, y = c, z = joint_fitness_chronic)) +
+  geom_contour(aes(z = f_H_chronic), bins = 10, color = "steelblue", alpha = 0.5) +
+  geom_contour(aes(z = f_P_chronic), bins = 10, color = "lightcoral", alpha = 0.5) +
+  geom_line(data = opt_c_cr, aes(x = v, y = c), color = "darkblue", inherit.aes = FALSE, size = 1) +
+  geom_line(data = opt_v_cr, aes(x = v, y = c), color = "firebrick", inherit.aes = FALSE, size = 1) +
+  geom_point(data = opt_joint_chronic, aes(x = v, y = c), color = "black", size = 3, inherit.aes = FALSE) +
+  labs(title = "ES Chronic \nJoint Fitness", x = "v", y = "c") +
+  theme(legend.position = "none") +
+  scale_x_continuous(breaks = c(0, 0.5, 1)) +
+  scale_y_continuous(breaks = c(0, 0.5, 1))
+
+
+# Compose grid
+(A + B + C) / (D + E + F)
+
+```
+
+# Simulation results 
+
+## 1. Host Trait (c) Evolution
+
+### Acute-EI:
+
+- Rapid stable convergence, with higher c and lower v.  
+
+- This reflects the classical co-adaptation to a static Nash equilibrium.
+
+### Chronic-EI:
+
+- c stabilizes around a slightly lower value, consistent with reduced pressure on clearance when infections are persistent.
+
+- v again stabilizes near 0.5, but possibly with slightly dampened evolution.
+
+- Expected for equilibrium-focused dynamics where mutual strategies are fixed traits.
+
+### Acute-ES:
+
+- c increases over time with moderate noise, stabilizing ~0.8.
+
+- v shows more variability, fluctuating around a slightly lower average (~0.4–0.5).
+
+- In this model, both trait values and response slopes evolve, allowing more feedback and noise. Still, it converges to similar endpoints.
+
+### Chronic-ES:
+
+- c stays below acute values, non monotonic.
+
+- v shows non-monotonic, drifting dynamics, dipping and then rebounding over evolutionary time.
+
+- This suggests instability or continual adaptation — possibly due to context-dependent strategies creating feedback loops in chronic environments.
+        
+```{r trait, echo=FALSE}
+
+th <- ggplot(df_summary, aes(x = time, y = c_mean)) +
+  geom_line(alpha = 0.6) +
+  facet_wrap(model ~ scenario ) +
+  labs(title = "Host Trait (c) Evolution", y = "Clearance (c)", x = "Evolutionary Time")+
+  #scale_color_manual(values = c("darkblue", "firebrick"))+
+  scale_x_log10(labels = trans_format("log10", math_format(10^.x)))
+
+tp <- ggplot(df_summary, aes(x = time, y = v_mean)) +
+  geom_line(alpha = 0.6) +
+  facet_wrap(model ~ scenario) +
+  labs(title = "Pathogen Trait (v) Evolution", y = "Virulence (v)", x = "Evolutionary Time")+
+  #scale_color_manual(values = c("darkblue", "firebrick"))+
+  scale_x_log10(labels = trans_format("log10", math_format(10^.x)))
+
+th+tp
+```
+
+## 3. Fitness over Time - Notes
+
+### Host fitness
+
+#### EI–Acute:
+
+- Fitness converges quickly to a low but stable value.
+
+- This reflects the cost of high clearance in acute infection, which yields modest returns under strong pressure to eliminate infection.
+
+#### EI–Chronic:
+
+- Host fitness stabilizes at a much higher level (~1.6).
+
+- Suggests a more favorable trade-off: hosts evolve clearance levels that allow coexistence with lower cost, yielding higher net payoff.
+
+#### ES–Acute:
+
+- Very similar to EI–Acute but noisy.
+
+- Because ES models allow evolving responsiveness, the host may fine-tune clearance for a small advantage.
+
+#### ES–Chronic:
+
+- Even noisier, host leverages the co-evolutionary feedback in chronic infection to optimize strategy?
+
+### Pathogen Fitness
+
+#### EI–Acute:
+
+- Pathogen fitness converges to ~0.2, low but stable.
+
+- Reflects a controlled pathogen population; the host successfully constrains pathogen fitness via clearance.
+
+#### EI–Chronic:
+
+- Slightly higher fitness due to longer infection duration, maybe giving pathogens more room to replicate despite host defenses?
+
+#### ES–Acute:
+
+- Similar to EI–Acute, slightly more variability but no major divergence.
+
+- Pathogen strategies adjust dynamically, but host control remains effective.
+
+#### ES–Chronic:
+
+- Looks like arms-race dynamics and delayed host counter-adaptations?
+
+```{r fitness, echo=FALSE}
+
+fh <- ggplot(df_summary, aes(x = time, y = f_H_mean)) +
+  geom_line(alpha = 0.7) +
+  facet_wrap(model ~ scenario) +
+  labs(title = "Host Fitness over Time", y = "FH", x = "Time")+
+  #scale_color_manual(values = c("darkblue", "firebrick"))+
+ scale_x_log10(labels = trans_format("log10", math_format(10^.x)))
+
+fp <- ggplot(df_summary, aes(x = time, y = f_P_mean)) +
+  geom_line(alpha = 0.7) +
+  facet_wrap(model  ~ scenario) +
+  labs(title = "Pathogen Fitness over Time", y = "FP", x = "Time")+
+  #scale_color_manual(values = c("darkblue", "firebrick"))+
+  scale_x_log10(labels = trans_format("log10", math_format(10^.x))) 
+
+fh+fp
+```
+
+## 5. Relative Substitution Rates
+
+### Host
+
+#### EI–Acute vs. Chronic:
+
+- Acute vs. chronic scenarios are very similar.
+
+- Most host adaptive changes occur early (possibly a single directional sweep), then selection pressure relaxes or equilibrium is reached. 
+
+#### ES–Acute vs. Chronic:
+
+- Slightly more variable early on, especially in chronic ES.
+
+- Substitution rates converge to similar values as EI.
+
+- Context-dependent traits may delay convergence slightly, but the overall tempo is similar. Chronic ES has persistent pathogen turnover, unlike the stasis seen in EI.
+  
+### Pathogen
+
+#### EI–Acute vs. Chronic:
+
+- Pathogens evolve faster than hosts, consistent with smaller Ne and higher mutation effect.
+
+#### ES–Acute vs. Chronic:
+
+- Slightly elevated initial rate in acute, with greater early variability in chronic.
+
+- Still converges to rates similar to EI—pathogen evolution slows as equilibrium is approached.
+
+- ES dynamics don't fundamentally change the overall tempo, but they introduce more noise (especially in chronic infections where co-evolution is stronger).
+    
+```{r substitution, echo=FALSE}
+sh <- ggplot(df_summary, aes(x = time, y = omega_H)) +
+  geom_line(alpha = 0.6) +
+  facet_wrap(model ~ scenario) +
+  labs(title = "Relative Host Substitution Rate", y = expression(omega[H]), x = "Time")+
+  #scale_color_manual(values = c("darkblue", "#ab3329"))+
+  scale_x_log10(labels = trans_format("log10", math_format(10^.x)))
+
+sp <- ggplot(df_summary, aes(x = time, y = omega_P)) +
+  geom_line(alpha = 0.6) +
+  facet_wrap(model ~ scenario) +
+  labs(title = "Relative Pathogen Substitution Rate", y = expression(omega[P]), x = "Time")+
+  #scale_color_manual(values = c("darkblue", "#ab3329"))+
+  scale_x_log10(labels = trans_format("log10", math_format(10^.x)))
+
+sh+sp
+```
+
+## Distribution plots 
+
+### EI Acute:
+
+- Rapid convergence to a single joint optimum with very little variance.
+
+- Reflects the fixed-strategy nature of EI; dynamics settle into a stable evolutionary attractor.
+
+### EI Chronic:
+
+- Very narrow and stable peak, implying strong selection and low evolutionary flexibility.
+
+### ES Acute:
+
+- Still fairly localized near high cc, intermediate vv, but notably more spread.
+
+- Multiple small peaks: evolutionary branching or slow drift in trait space.
+
+- This reflects co-evolutionary feedback loops—host and pathogen traits co-adapt, creating local attractors.
+
+### ES Chronic:
+
+- Broad distribution, sloping positively: as v increases, so does c.
+
+- Suggests trait correlation under ES dynamics: coevolution aligns clearance with virulence.
+
+- Also shows much greater variance—suggesting sustained arms-race dynamics or polymorphism, especially in chronic infections where co-adaptation is prolonged and nonlinear.
+
+```{r density, echo=FALSE}
+
+ggplot(df_summary, aes(x = v_mean, y = c_mean)) +
+  stat_bin2d(bins = 200) +
+  scale_fill_viridis_c(trans = "log10", name = "Density") +
+  facet_grid(scenario ~ model) +
+  labs(x = "Virulence (v)", y = "Clearance (c)")
+
+```
+
+## Dwell times 
+
+If substitution events are memoryless, the time between substitutions should follow an exponential distribution. 
+
+In the simulation, the waiting time until the next event is drawn from an exponential distribution with rate equal to the sum of all possible event rates (here: substitutions).
+
+###EI (acute/chronic):
+
+```{r dwell, echo=FALSE, message=FALSE, warning=FALSE}
+
+dwell_times <- df %>%
+  filter(dwell_time > 0, dwell_time < 1e+04)
+
+ggplot(dwell_times, aes(x = dwell_time)) +
+  geom_histogram(binwidth = 50) +
+  facet_grid(scenario ~ model)+
+  labs(x = "Time between substitutions", y = "Distribution (log scale)") +
+  scale_y_log10()
+
+```
+
+Overall, theory well coded. Simulations are qualitatively make sense. We have to double check that the steps and parameters are well implemented and biologically makes sense. 
+

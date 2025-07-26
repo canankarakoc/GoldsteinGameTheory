@@ -47,3 +47,12 @@ po/*~
 
 # RStudio Connect folder
 rsconnect/
+
+# R project file
+GoldsteinGameTheory.Rproj
+
+# Python
+/venv
+
+# Mac
+.DS_Store
