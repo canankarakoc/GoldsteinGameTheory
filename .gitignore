@@ -56,3 +56,6 @@ GoldsteinGameTheory.Rproj
 
 # Mac
 .DS_Store
+
+# intermediate/old files
+/old

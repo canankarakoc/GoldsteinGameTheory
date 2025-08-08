@@ -5,6 +5,7 @@ date: July 2025
 output:
   pdf_document: default
   html_document: default
+  word_document: default
 editor_options: 
   chunk_output_type: console
 ---
@@ -195,14 +196,14 @@ library(scales)
 
 mytheme <- theme_bw() +
   theme(axis.ticks.length = unit(.25, "cm")) +
-  theme(legend.text = element_text(size = 10)) +
-  theme(axis.text = element_text(size = 10, color = "black"), axis.title = element_text(size = 10)) +
-  theme(plot.title = element_text(size = 11))+
+  theme(legend.text = element_text(size = 12)) +
+  theme(axis.text = element_text(size = 14, color = "black"), axis.title = element_text(size = 16)) +
+  theme(plot.title = element_text(size = 16))+
   theme(panel.border = element_rect(
     fill = NA, colour = "black",
     size = 1
   )) +
-  theme(strip.text.x = element_text(size = 10), strip.background = element_blank()) +
+  theme(strip.text.x = element_text(size = 16), strip.background = element_blank()) +
   #theme(legend.title = element_blank()) +
   theme(panel.border = element_rect(
     fill = NA, colour = "black",
@@ -213,38 +214,16 @@ mytheme <- theme_bw() +
     axis.text.y.right = element_blank(), axis.title.y.right = element_blank()
   ) +
   theme(
-    axis.title.x = element_text(margin = margin(10, 0, 0)),
-    axis.title.y = element_text(margin = margin(0, 10, 0, 0)),
-    axis.text.x = element_text(margin = margin(10, 0, 0, 0)),
-    axis.text.y = element_text(margin = margin(0, 10, 0, 0))
+    axis.title.x = element_text(margin = margin(16, 0, 0)),
+    axis.title.y = element_text(margin = margin(0, 16, 0, 0)),
+    axis.text.x = element_text(margin = margin(16, 0, 0, 0)),
+    axis.text.y = element_text(margin = margin(0, 16, 0, 0))
   )
 
 theme_set(mytheme)
 
-# Load all simulation results
-df <- read.csv("results/all_simulations_replicates.csv")
-
-# Remove burn-in time
-#df_clean <- df %>% filter(time > 1000)
-
-# Average across replicates (optionally include sd or se)
-df_summary <- df %>%
-  filter(time > 10000) %>% #burn in time 
-  group_by(model, scenario, time) %>%
-  summarise(
-    c_mean = mean(c, na.rm = TRUE),
-    v_mean = mean(v, na.rm = TRUE),
-    f_H_mean = mean(f_H, na.rm = TRUE),
-    f_P_mean = mean(f_P, na.rm = TRUE),
-    omega_H = mean(omega_H, na.rm = TRUE),
-    omega_P = mean(omega_P, na.rm = TRUE),
-    dwell_time = mean(dwell_time, na.rm = TRUE),
-    theta_c = mean(theta_c, na.rm = TRUE), 
-    theta_v = mean(theta_v, na.rm = TRUE),
-    .groups = "drop"
-  )
-
 ```
+
 
 # Theory Notes
 ## Fitness Landscapes 
@@ -319,6 +298,7 @@ f_H_acute <- function(c, v) {
   d <- d_acute(c, v)
   c / (d + c)
 }
+
 
 f_P_acute <- function(c, v) {
   d <- d_acute(c, v)
@@ -432,7 +412,7 @@ opt_joint_chronic <- find_nash_brute_force(opt_c_cr, opt_v_cr)
 A <- ggplot(grid, aes(x = v, y = c, z = f_H_acute)) +
   geom_contour_filled() +
   geom_line(data = opt_c_ac, aes(x = v, y = c), color = "steelblue", size = 1, inherit.aes = FALSE) +
-  labs(title = "EI Acute \nHost Fitness", x = "v", y = "c") +
+  labs(x = "v", y = "c") +
   theme(legend.position = "none") +
   scale_x_continuous(breaks = c(0, 0.5, 1)) +
   scale_y_continuous(breaks = c(0, 0.5, 1))
@@ -441,7 +421,7 @@ A <- ggplot(grid, aes(x = v, y = c, z = f_H_acute)) +
 B <- ggplot(grid, aes(x = v, y = c, z = f_P_acute)) +
   geom_contour_filled() +
   geom_line(data = opt_v_ac, aes(x = v, y = c), color = "lightcoral", size = 1, inherit.aes = FALSE) +
-  labs(title = "EI Acute \nPathogen Fitness", x = "v", y = "c") +
+  labs(x = "v", y = "c") +
   theme(legend.position = "none") +
   scale_x_continuous(breaks = c(0, 0.5, 1)) +
   scale_y_continuous(breaks = c(0, 0.5, 1))
@@ -453,7 +433,7 @@ C <- ggplot(grid, aes(x = v, y = c, z = joint_fitness_acute)) +
   geom_line(data = opt_c_ac, aes(x = v, y = c), color = "darkblue", inherit.aes = FALSE, size = 1, size = 1) +
   geom_line(data = opt_v_ac, aes(x = v, y = c), color = "firebrick", inherit.aes = FALSE, size = 1) +
   geom_point(data = opt_joint_acute, aes(x = v, y = c), color = "black", size = 3, inherit.aes = FALSE) +
-  labs(title = "EI Acute \nJoint Fitness", x = "v", y = "c") +
+  labs(x = "v", y = "c") +
   theme(legend.position = "none") +
   scale_x_continuous(breaks = c(0, 0.5, 1)) +
   scale_y_continuous(breaks = c(0, 0.5, 1))
@@ -462,7 +442,7 @@ C <- ggplot(grid, aes(x = v, y = c, z = joint_fitness_acute)) +
 D <- ggplot(grid, aes(x = v, y = c, z = f_H_chronic)) +
   geom_contour_filled() +
   geom_line(data = opt_c_cr, aes(x = v, y = c), color = "steelblue", size = 1, inherit.aes = FALSE) +
-  labs(title = "ES Chronic \nHost Fitness", x = "v", y = "c") +
+  labs(x = "v", y = "c") +
   theme(legend.position = "none") +
   scale_x_continuous(breaks = c(0, 0.5, 1)) +
   scale_y_continuous(breaks = c(0, 0.5, 1))
@@ -471,7 +451,7 @@ D <- ggplot(grid, aes(x = v, y = c, z = f_H_chronic)) +
 E <- ggplot(grid, aes(x = v, y = c, z = f_P_chronic)) +
   geom_contour_filled() +
   geom_line(data = opt_v_cr, aes(x = v, y = c), color = "lightcoral", size = 1, inherit.aes = FALSE) +
-  labs(title = "ES Chronic \nPathogen Fitness", x = "v", y = "c") +
+  labs(x = "v", y = "c") +
   theme(legend.position = "none") +
   scale_x_continuous(breaks = c(0, 0.5, 1)) +
   scale_y_continuous(breaks = c(0, 0.5, 1))
@@ -483,14 +463,15 @@ F <- ggplot(grid, aes(x = v, y = c, z = joint_fitness_chronic)) +
   geom_line(data = opt_c_cr, aes(x = v, y = c), color = "darkblue", inherit.aes = FALSE, size = 1) +
   geom_line(data = opt_v_cr, aes(x = v, y = c), color = "firebrick", inherit.aes = FALSE, size = 1) +
   geom_point(data = opt_joint_chronic, aes(x = v, y = c), color = "black", size = 3, inherit.aes = FALSE) +
-  labs(title = "ES Chronic \nJoint Fitness", x = "v", y = "c") +
+  labs(x = "v", y = "c") +
   theme(legend.position = "none") +
   scale_x_continuous(breaks = c(0, 0.5, 1)) +
   scale_y_continuous(breaks = c(0, 0.5, 1))
 
 
 # Compose grid
-(A + B + C) / (D + E + F)
+(A + B + C) + plot_annotation(tag_levels = 'A')  # tags plots as A, B, C
+
 
 ```
 
@@ -528,24 +509,6 @@ F <- ggplot(grid, aes(x = v, y = c, z = joint_fitness_chronic)) +
 
 - This suggests instability or continual adaptation — possibly due to context-dependent strategies creating feedback loops in chronic environments.
         
-```{r trait, echo=FALSE}
-
-th <- ggplot(df_summary, aes(x = time, y = c_mean)) +
-  geom_line(alpha = 0.6) +
-  facet_wrap(model ~ scenario ) +
-  labs(title = "Host Trait (c) Evolution", y = "Clearance (c)", x = "Evolutionary Time")+
-  #scale_color_manual(values = c("darkblue", "firebrick"))+
-  scale_x_log10(labels = trans_format("log10", math_format(10^.x)))
-
-tp <- ggplot(df_summary, aes(x = time, y = v_mean)) +
-  geom_line(alpha = 0.6) +
-  facet_wrap(model ~ scenario) +
-  labs(title = "Pathogen Trait (v) Evolution", y = "Virulence (v)", x = "Evolutionary Time")+
-  #scale_color_manual(values = c("darkblue", "firebrick"))+
-  scale_x_log10(labels = trans_format("log10", math_format(10^.x)))
-
-th+tp
-```
 
 ## 3. Fitness over Time - Notes
 
@@ -595,24 +558,6 @@ th+tp
 
 - Looks like arms-race dynamics and delayed host counter-adaptations?
 
-```{r fitness, echo=FALSE}
-
-fh <- ggplot(df_summary, aes(x = time, y = f_H_mean)) +
-  geom_line(alpha = 0.7) +
-  facet_wrap(model ~ scenario) +
-  labs(title = "Host Fitness over Time", y = "FH", x = "Time")+
-  #scale_color_manual(values = c("darkblue", "firebrick"))+
- scale_x_log10(labels = trans_format("log10", math_format(10^.x)))
-
-fp <- ggplot(df_summary, aes(x = time, y = f_P_mean)) +
-  geom_line(alpha = 0.7) +
-  facet_wrap(model  ~ scenario) +
-  labs(title = "Pathogen Fitness over Time", y = "FP", x = "Time")+
-  #scale_color_manual(values = c("darkblue", "firebrick"))+
-  scale_x_log10(labels = trans_format("log10", math_format(10^.x))) 
-
-fh+fp
-```
 
 ## 5. Relative Substitution Rates
 
@@ -645,25 +590,177 @@ fh+fp
 - Still converges to rates similar to EI—pathogen evolution slows as equilibrium is approached.
 
 - ES dynamics don't fundamentally change the overall tempo, but they introduce more noise (especially in chronic infections where co-evolution is stronger).
-    
-```{r substitution, echo=FALSE}
-sh <- ggplot(df_summary, aes(x = time, y = omega_H)) +
-  geom_line(alpha = 0.6) +
-  facet_wrap(model ~ scenario) +
-  labs(title = "Relative Host Substitution Rate", y = expression(omega[H]), x = "Time")+
-  #scale_color_manual(values = c("darkblue", "#ab3329"))+
-  scale_x_log10(labels = trans_format("log10", math_format(10^.x)))
 
-sp <- ggplot(df_summary, aes(x = time, y = omega_P)) +
-  geom_line(alpha = 0.6) +
-  facet_wrap(model ~ scenario) +
-  labs(title = "Relative Pathogen Substitution Rate", y = expression(omega[P]), x = "Time")+
-  #scale_color_manual(values = c("darkblue", "#ab3329"))+
-  scale_x_log10(labels = trans_format("log10", math_format(10^.x)))
+```{r trait, echo=FALSE}
 
-sh+sp
+# Load all simulation results
+ei_acute   <- read.csv("results/ei_ei_acute.csv")
+#ei_chronic <- read.csv("results/ei_ei_chronic.csv")
+es_acute   <- read.csv("results/es_es_acute_full.csv")
+#es_chronic <- read.csv("results/es_es_chronic_full.csv")
+es_acute_fixed_host   <- read.csv("results/es_es_acute_fixed_host.csv")
+es_acute_fixed_pathogen   <- read.csv("results/es_es_acute_fixed_pathogen.csv")
+
+ei_c <- ggplot(ei_acute%>%filter(time>10000), aes(x = time, y = c)) +
+  geom_line(alpha = 0.6, linewidth = 0.5) +
+  labs(y = "Immune activity (c)", x = "Evolutionary time")+
+  scale_x_log10(labels = trans_format("log10", math_format(10^.x)))+
+  scale_y_continuous(limits = c(0, 1), breaks = c(0, 0.5, 1))
+
+ei_v <- ggplot(ei_acute%>%filter(time>10000), aes(x = time, y = v)) +
+  geom_line(alpha = 0.6, linewidth = 0.5) +
+  labs(y = "Virulence (v)", x = "Evolutionary time")+
+  scale_x_log10(labels = trans_format("log10", math_format(10^.x)))+
+  scale_y_continuous(limits = c(0, 1), breaks = c(0, 0.5, 1))
+
+ei_fh <- ggplot(ei_acute%>%filter(time>10000), aes(x = time, y = f_H)) +
+  geom_line(alpha = 0.6, linewidth = 0.5) +
+  labs(y = "Host fitness (fH)", x = "Evolutionary time")+
+  scale_x_log10(labels = trans_format("log10", math_format(10^.x)))+
+  scale_y_continuous(limits = c(0, 1), breaks = c(0, 0.5, 1))
+
+ei_fp <- ggplot(ei_acute%>%filter(time>10000), aes(x = time, y = f_P)) +
+  geom_line(alpha = 0.6, linewidth = 0.5) +
+  labs(y = "Pathogen fitness (fP)", x = "Evolutionary time")+
+  scale_x_log10(labels = trans_format("log10", math_format(10^.x)))+
+  scale_y_continuous(limits = c(0, 1), breaks = c(0, 0.5, 1))
+
+ei_oh <- ggplot(ei_acute%>%filter(time>10000), aes(x = time, y = omega_H)) +
+  geom_line(alpha = 0.6, linewidth = 0.5) +
+  labs(y = "Host subtitutions", x = "Evolutionary time")+
+  scale_x_log10(labels = trans_format("log10", math_format(10^.x)))+
+  scale_y_continuous(limits = c(65,85), breaks = c(65, 75, 85))
+
+ei_op <- ggplot(ei_acute%>%filter(time>10000), aes(x = time, y = omega_P)) +
+  geom_line(alpha = 0.6, linewidth = 0.5) +
+  labs(y = "Pathogen subtitutions", x = "Evolutionary time")+
+  scale_x_log10(labels = trans_format("log10", math_format(10^.x)))+
+  scale_y_continuous(limits = c(4500,6500), breaks = c(4500, 5500, 6500))
+
+(ei_c + ei_v) / (ei_fh + ei_fp) / (ei_oh +ei_op) + plot_annotation(tag_levels = 'A')
+
+
+es_c <- ggplot(es_acute%>%filter(time>10000), aes(x = time, y = c)) +
+  geom_line(alpha = 0.6, linewidth = 0.5) +
+  labs(y = "Immune activity (c)", x = "Evolutionary time")+
+  scale_x_log10(labels = trans_format("log10", math_format(10^.x)))+
+  scale_y_continuous(limits = c(0, 1), breaks = c(0, 0.5, 1))
+
+es_v <- ggplot(es_acute%>%filter(time>10000), aes(x = time, y = v)) +
+  geom_line(alpha = 0.6, linewidth = 0.5) +
+  labs(y = "Virulence (v)", x = "Evolutionary time")+
+  scale_x_log10(labels = trans_format("log10", math_format(10^.x)))+
+  scale_y_continuous(limits = c(0, 1), breaks = c(0, 0.5, 1))
+
+es_fh <- ggplot(es_acute%>%filter(time>10000), aes(x = time, y = f_H)) +
+  geom_line(alpha = 0.6, linewidth = 0.5) +
+  labs(y = "Host fitness (fH)", x = "Evolutionary time")+
+  scale_x_log10(labels = trans_format("log10", math_format(10^.x)))+
+  scale_y_continuous(limits = c(0, 1), breaks = c(0, 0.5, 1))
+
+es_fp <- ggplot(es_acute%>%filter(time>10000), aes(x = time, y = f_P)) +
+  geom_line(alpha = 0.6, linewidth = 0.5) +
+  labs(y = "Pathogen fitness (fP)", x = "Evolutionary time")+
+  scale_x_log10(labels = trans_format("log10", math_format(10^.x)))+
+  scale_y_continuous(limits = c(0, 1), breaks = c(0, 0.5, 1))
+
+es_oh <- ggplot(es_acute%>%filter(time>10000), aes(x = time, y = omega_H)) +
+  geom_line(alpha = 0.6, linewidth = 0.5) +
+  labs(y = "Host subtitutions", x = "Evolutionary time")+
+  scale_x_log10(labels = trans_format("log10", math_format(10^.x)))+
+  scale_y_continuous(limits = c(100,200), breaks = c(100, 150, 200))
+
+es_op <- ggplot(es_acute%>%filter(time>10000), aes(x = time, y = omega_P)) +
+  geom_line(alpha = 0.6, linewidth = 0.5) +
+  labs(y = "Pathogen subtitutions", x = "Evolutionary time")+
+  scale_x_log10(labels = trans_format("log10", math_format(10^.x)))+
+  scale_y_continuous(limits = c(8000,16000), breaks = c(8000, 12000, 16000))
+
+(es_c + es_v) / (es_fh + es_fp) / (es_oh +es_op) + plot_annotation(tag_levels = 'A')
+
+
+eshf_c <- ggplot(es_acute_fixed_host%>%filter(time>10000), aes(x = time, y = c)) +
+  geom_line(alpha = 0.6, linewidth = 0.5) +
+  labs(y = "Immune activity (c)", x = "Evolutionary time")+
+  scale_x_log10(labels = trans_format("log10", math_format(10^.x)))+
+  scale_y_continuous(limits = c(0, 1), breaks = c(0, 0.5, 1))
+
+eshf_v <- ggplot(es_acute_fixed_host%>%filter(time>10000), aes(x = time, y = v)) +
+  geom_line(alpha = 0.6, linewidth = 0.5) +
+  labs(y = "Virulence (v)", x = "Evolutionary time")+
+  scale_x_log10(labels = trans_format("log10", math_format(10^.x)))+
+  scale_y_continuous(limits = c(0, 1), breaks = c(0, 0.5, 1))
+
+eshf_fh <- ggplot(es_acute_fixed_host%>%filter(time>10000), aes(x = time, y = f_H)) +
+  geom_line(alpha = 0.6, linewidth = 0.5) +
+  labs(y = "Host fitness (fH)", x = "Evolutionary time")+
+  scale_x_log10(labels = trans_format("log10", math_format(10^.x)))+
+  scale_y_continuous(limits = c(0, 1), breaks = c(0, 0.5, 1))
+
+eshf_fp <- ggplot(es_acute_fixed_host%>%filter(time>10000), aes(x = time, y = f_P)) +
+  geom_line(alpha = 0.6, linewidth = 0.5) +
+  labs(y = "Pathogen fitness (fP)", x = "Evolutionary time")+
+  scale_x_log10(labels = trans_format("log10", math_format(10^.x)))+
+  scale_y_continuous(limits = c(0, 1), breaks = c(0, 0.5, 1))
+
+eshf_oh <- ggplot(es_acute_fixed_host%>%filter(time>10000), aes(x = time, y = omega_H)) +
+  geom_line(alpha = 0.6, linewidth = 0.5) +
+  labs(y = "Host subtitutions", x = "Evolutionary time")+
+  scale_x_log10(labels = trans_format("log10", math_format(10^.x)))+
+  scale_y_continuous(limits = c(100,200), breaks = c(100, 150, 200))
+
+eshf_op <- ggplot(es_acute_fixed_host%>%filter(time>10000), aes(x = time, y = omega_P)) +
+  geom_line(alpha = 0.6, linewidth = 0.5) +
+  labs(y = "Pathogen subtitutions", x = "Evolutionary time")+
+  scale_x_log10(labels = trans_format("log10", math_format(10^.x)))+
+  scale_y_continuous(limits = c(6000,12000), breaks = c(6000, 9000, 12000))
+
+(eshf_c + eshf_v) / (eshf_fh + eshf_fp) / (eshf_oh +eshf_op) + plot_annotation(tag_levels = 'A')
+
+
+espf_c <- ggplot(es_acute_fixed_pathogen%>%filter(time>10000), aes(x = time, y = c)) +
+  geom_line(alpha = 0.6, linewidth = 0.5) +
+  labs(y = "Immune activity (c)", x = "Evolutionary time")+
+  scale_x_log10(labels = trans_format("log10", math_format(10^.x)))+
+  scale_y_continuous(limits = c(0, 1), breaks = c(0, 0.5, 1))
+
+espf_v <- ggplot(es_acute_fixed_pathogen%>%filter(time>10000), aes(x = time, y = v)) +
+  geom_line(alpha = 0.6, linewidth = 0.5) +
+  labs(y = "Virulence (v)", x = "Evolutionary time")+
+  scale_x_log10(labels = trans_format("log10", math_format(10^.x)))+
+  scale_y_continuous(limits = c(0, 1), breaks = c(0, 0.5, 1))
+
+espf_fh <- ggplot(es_acute_fixed_pathogen%>%filter(time>10000), aes(x = time, y = f_H)) +
+  geom_line(alpha = 0.6, linewidth = 0.5) +
+  labs(y = "Host fitness (fH)", x = "Evolutionary time")+
+  scale_x_log10(labels = trans_format("log10", math_format(10^.x)))+
+  scale_y_continuous(limits = c(0, 1), breaks = c(0, 0.5, 1))
+
+espf_fp <- ggplot(es_acute_fixed_pathogen%>%filter(time>10000), aes(x = time, y = f_P)) +
+  geom_line(alpha = 0.6, linewidth = 0.5) +
+  labs(y = "Pathogen fitness (fP)", x = "Evolutionary time")+
+  scale_x_log10(labels = trans_format("log10", math_format(10^.x)))+
+  scale_y_continuous(limits = c(0, 1), breaks = c(0, 0.5, 1))
+
+espf_oh <- ggplot(es_acute_fixed_pathogen%>%filter(time>10000), aes(x = time, y = omega_H)) +
+  geom_line(alpha = 0.6, linewidth = 0.5) +
+  labs(y = "Host subtitutions", x = "Evolutionary time")+
+  scale_x_log10(labels = trans_format("log10", math_format(10^.x)))+
+  scale_y_continuous(limits = c(100,200), breaks = c(100, 150, 200))
+
+espf_op <- ggplot(es_acute_fixed_pathogen%>%filter(time>10000), aes(x = time, y = omega_P)) +
+  geom_line(alpha = 0.6, linewidth = 0.5) +
+  labs(y = "Pathogen subtitutions", x = "Evolutionary time")+
+  scale_x_log10(labels = trans_format("log10", math_format(10^.x)))+
+  scale_y_continuous(limits = c(5000,8000), breaks = c(5000, 6500, 8000))
+
+(espf_c + espf_v) / (espf_fh + espf_fp) / (espf_oh +espf_op) + plot_annotation(tag_levels = 'A')
+
+
+
 ```
 
+    
 ## Distribution plots 
 
 ### EI Acute:
@@ -694,12 +791,29 @@ sh+sp
 
 ```{r density, echo=FALSE}
 
-ggplot(df_summary, aes(x = v_mean, y = c_mean)) +
-  stat_bin2d(bins = 200) +
+
+a <- ggplot(ei_acute, aes(x = v, y = c)) +
+  stat_bin2d(bins = 100) +
   scale_fill_viridis_c(trans = "log10", name = "Density") +
-  facet_grid(scenario ~ model) +
   labs(x = "Virulence (v)", y = "Clearance (c)")
 
+b <- ggplot(es_acute, aes(x = v, y = c)) +
+  stat_bin2d(bins = 100) +
+  scale_fill_viridis_c(trans = "log10", name = "Density") +
+  labs(x = "Virulence (v)", y = "Clearance (c)")
+
+c <- ggplot(es_acute_fixed_host, aes(x = v, y = c)) +
+  stat_bin2d(bins = 100) +
+  scale_fill_viridis_c(trans = "log10", name = "Density") +
+  labs(x = "Virulence (v)", y = "Clearance (c)")
+
+d <- ggplot(es_acute_fixed_pathogen, aes(x = v, y = c)) +
+  stat_bin2d(bins = 100) +
+  scale_fill_viridis_c(trans = "log10", name = "Density") +
+  labs(x = "Virulence (v)", y = "Clearance (c)")
+
+
+a + b + c + d + plot_annotation(tag_levels = 'A')
 ```
 
 ## Dwell times 
@@ -725,3 +839,64 @@ ggplot(dwell_times, aes(x = dwell_time)) +
 
 Overall, theory well coded. Simulations are qualitatively make sense. We have to double check that the steps and parameters are well implemented and biologically makes sense. 
 
+# Pay-off matrix
+
+```{r dwell, echo=FALSE, message=FALSE, warning=FALSE}
+# Strategy grids
+c_vals <- round(seq(0.1, 0.9, length.out = 4), 2)
+v_vals <- round(seq(0.1, 0.9, length.out = 4), 2)
+
+# Parameters
+d_0 <- 0.1
+nC <- 0.1
+nV <- 1.0
+epsilon <- 1/999
+onePlusEpsilon <- 1 + epsilon
+
+# Safe division
+safe_div <- function(x) pmin(pmax(x, 0.001), 0.999)
+
+# Mortality function
+compute_mortality <- function(c, v) {
+  c <- safe_div(c)
+  v <- safe_div(v)
+  d_0 + nC * onePlusEpsilon * c / (onePlusEpsilon - c) +
+       nV * onePlusEpsilon * v / (onePlusEpsilon - v)
+}
+
+# Fitness functions
+f_H <- function(c, v) {
+  d <- compute_mortality(c, v)
+  c / (c + d)
+}
+
+f_P <- function(c, v) {
+  d <- compute_mortality(c, v)
+  v / (c + d)
+}
+
+# Create payoff matrices
+host_matrix <- matrix(0, nrow = length(c_vals), ncol = length(v_vals))
+pathogen_matrix <- matrix(0, nrow = length(c_vals), ncol = length(v_vals))
+
+for (i in seq_along(c_vals)) {
+  for (j in seq_along(v_vals)) {
+    host_matrix[i, j] <- f_H(c_vals[i], v_vals[j])
+    pathogen_matrix[i, j] <- f_P(c_vals[i], v_vals[j])
+  }
+}
+
+# Label rows/cols
+rownames(host_matrix) <- paste0("c=", c_vals)
+colnames(host_matrix) <- paste0("v=", v_vals)
+rownames(pathogen_matrix) <- paste0("c=", c_vals)
+colnames(pathogen_matrix) <- paste0("v=", v_vals)
+
+# Display
+cat("Host payoff matrix:\n")
+print(round(host_matrix, 3))
+
+cat("\nPathogen payoff matrix:\n")
+print(round(pathogen_matrix, 3))
+
+```
